@@ -270,7 +270,7 @@ def summarize_results(records: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 def dump_outputs(output_dir: str, records: List[Dict[str, Any]], summary: Dict[str, Any]) -> Dict[str, str]:
     ensure_dir(output_dir)
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M?")
 
     detail_json_path = os.path.join(output_dir, f"batch_eval_detail_{ts}.json")
     summary_json_path = os.path.join(output_dir, f"batch_eval_summary_{ts}.json")

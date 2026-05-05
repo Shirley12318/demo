@@ -15,7 +15,7 @@ def get_overview_data(db_config: Dict[str, str], discussion_topics: List[Dict[st
     """
     conn = mysql.connector.connect(**db_config)
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 1. 获取统计数据
             # 用户总数
             cursor.execute("SELECT COUNT(*) as count FROM users")
@@ -56,13 +56,13 @@ def get_overview_data(db_config: Dict[str, str], discussion_topics: List[Dict[st
             risk_mapping = []
             for rule in question_risk_rules:
                 cursor.execute(
-                    "SELECT COUNT(*) as count FROM chat_history WHERE user_message LIKE %s",
+                    "SELECT COUNT(*) as count FROM chat_history WHERE user_message LIKE ?",
                     (f"%{rule.get('label', '')}%",)
                 )
                 count = cursor.fetchone()["count"] if cursor.fetchone() else 0  # type: ignore
                 # 重新查询
                 cursor.execute(
-                    "SELECT COUNT(*) as count FROM chat_history WHERE user_message LIKE %s",
+                    "SELECT COUNT(*) as count FROM chat_history WHERE user_message LIKE ?",
                     (f"%{rule.get('label', '')}%",)
                 )
                 row = cursor.fetchone()
