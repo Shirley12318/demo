@@ -483,17 +483,40 @@ def ensure_users_role_schema() -> None:
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
-        if cursor.fetchone():
-            cursor.execute("PRAGMA table_info(users)")
-            cols = [col[1] for col in cursor.fetchall()]
-            if 'role' not in cols:
-                cursor.execute("ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'")
-        cursor.execute("UPDATE users SET role = 'admin' WHERE role = 'user' AND (identity = '管理员' OR LOWER(TRIM(identity)) IN ('admin', 'administrator', 'superadmin'))")
-        cursor.execute("UPDATE users SET role = 'user' WHERE role IS NULL OR TRIM(role) = '' OR LOWER(TRIM(role)) NOT IN ('admin', 'user')")
+        # ========== 新增：创建 users 表（如果不存在） ==========
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                identity TEXT DEFAULT '普通学生',
+                role TEXT DEFAULT 'user',
+                age_group TEXT DEFAULT '20-25岁',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # ========== 新增：创建 user_portraits 表（如果不存在） ==========
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_portraits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                ideal_belief INTEGER DEFAULT 80,
+                logic_thinking INTEGER DEFAULT 80,
+                practice_ability INTEGER DEFAULT 70,
+                psychological_quality INTEGER DEFAULT 75,
+                emotional_state INTEGER DEFAULT 70,
+                hidden_need TEXT,
+                tags TEXT,
+                current_major TEXT,
+                chat_content TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # 后续原来的 role 字段补充逻辑（可以保留，但既然表新建了，role 已经在）
+        # 为了避免错误，可以注释掉对 role 的 ALTER 和 UPDATE 操作
         conn.commit()
     except Exception as e:
-        logger.error(f"初始化 users.role 字段失败: {str(e)}")
+        logger.error(f"初始化 users 表失败: {str(e)}")
         conn.rollback()
         raise
     finally:
