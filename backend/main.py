@@ -14,7 +14,6 @@ os.environ['HF_HOME'] = os.path.join(os.getcwd(), '.cache', 'huggingface')
 os.environ['TRANSFORMERS_CACHE'] = os.path.join(os.getcwd(), '.cache', 'transformers')
 os.environ['SENTENCE_TRANSFORMERS_HOME'] = os.path.join(os.getcwd(), '.cache', 'sentence_transformers')
 
-import mysql.connector
 import jieba.posseg as pseg  # 用于NLP预处理：分词与词性标注
 from typing import Dict, Any, List, Optional, cast
 from http import HTTPStatus
@@ -28,6 +27,7 @@ import requests
 import base64
 import concurrent.futures
 from openai import OpenAI
+import sqlite3
 
 # ======================== 基础配置 ========================
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -44,12 +44,7 @@ app.add_middleware(
 )
 
 # 核心配置
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "mysql#061122",
-    "database": "sizheng_db"
-}
+DB_PATH = os.path.join(os.path.dirname(__file__), "data.db")
 dashscope.api_key = "sk-d2df76fb2d91448f97dc3d6d7007169e"
 
 # DeepSeek 大模型配置（使用 OpenAI 兼容接口）
@@ -767,10 +762,11 @@ def build_risk_prompt_block(risk_assessment: Optional[Dict[str, Any]]) -> str:
 # ======================== 数据库工具函数 ========================
 def get_db_connection():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        logger.info("数据库连接成功")
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row  # 使返回结果为字典样式
+        logger.info("SQLite 数据库连接成功")
         return conn
-    except mysql.connector.Error as e:
+    except sqlite3.Error as e:
         logger.error(f"数据库连接失败: {str(e)}")
         raise HTTPException(status_code=500, detail="数据库连接异常，请检查配置")
 

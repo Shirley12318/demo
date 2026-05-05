@@ -2,7 +2,6 @@ fastapi
 uvicorn[standard]
 python-multipart
 pydantic
-mysql-connector-python
 dashscope
 requests
 torch
