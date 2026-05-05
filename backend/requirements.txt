@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+mysql-connector-python
+dashscope
+requests
+torch
+transformers
+jieba
+chromadb
+sentence-transformers
+openai
+Flask==2.3.3
+Flask-CORS==4.0.0
+SQLAlchemy==2.0.21
+python-dateutil==2.8.2
