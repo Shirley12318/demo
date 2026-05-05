@@ -110,7 +110,7 @@ def normalize_db_role(role_value: Optional[str], identity_value: Optional[str] =
 def ensure_users_role_schema() -> None:
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("SHOW COLUMNS FROM users LIKE 'role'")
             has_role = cursor.fetchone()
 
@@ -823,7 +823,7 @@ def serialize_discussion_post(record: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_user_id_by_username(conn, username: str) -> int:
-    with conn.cursor(dictionary=True) as cursor:
+    with conn.cursor() as cursor:
         cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
         user_res = cursor.fetchone()
         if not user_res:
@@ -832,7 +832,7 @@ def get_user_id_by_username(conn, username: str) -> int:
 
 
 def get_discussion_post_by_id(conn, post_id: int) -> Dict[str, Any]:
-    with conn.cursor(dictionary=True) as cursor:
+    with conn.cursor() as cursor:
         cursor.execute(
             "SELECT id, user_id, topic, title, content, created_at, like_count, report_count FROM discussion_posts WHERE id = %s",
             (post_id,)
@@ -844,7 +844,7 @@ def get_discussion_post_by_id(conn, post_id: int) -> Dict[str, Any]:
 
 
 def fetch_discussion_post_detail(conn, post_id: int, viewer_user_id: Optional[int] = None) -> Dict[str, Any]:
-    with conn.cursor(dictionary=True) as cursor:
+    with conn.cursor() as cursor:
         if viewer_user_id is None:
             cursor.execute(
                 """
@@ -1035,7 +1035,7 @@ def score_news_for_keywords(item: Dict[str, str], keywords: List[str]) -> Dict[s
 def fetch_recommended_news_for_user(username: str, limit: int = 6) -> Dict[str, Any]:
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
             user_res = cursor.fetchone()
             if not user_res:
@@ -1066,7 +1066,7 @@ def fetch_recommended_news_for_user(username: str, limit: int = 6) -> Dict[str, 
 def ensure_chat_conversation_schema() -> None:
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS chat_conversations (
                     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '会话ID',
@@ -1150,7 +1150,7 @@ def ensure_chat_conversation_schema() -> None:
 def ensure_discussion_schema() -> None:
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS discussion_posts (
                     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '讨论帖ID',
@@ -1210,7 +1210,7 @@ def ensure_discussion_schema() -> None:
 
 
 def create_conversation_for_user(conn, user_id: int, title: Optional[str] = None) -> Dict[str, Any]:
-    with conn.cursor(dictionary=True) as cursor:
+    with conn.cursor() as cursor:
         cursor.execute(
             "INSERT INTO chat_conversations (user_id, title) VALUES (%s, %s)",
             (user_id, title or "新对话")
@@ -1226,7 +1226,7 @@ def create_conversation_for_user(conn, user_id: int, title: Optional[str] = None
 
 
 def get_conversation_for_user(conn, user_id: int, conversation_id: int) -> Dict[str, Any]:
-    with conn.cursor(dictionary=True) as cursor:
+    with conn.cursor() as cursor:
         cursor.execute(
             "SELECT id, user_id, title, created_at, updated_at FROM chat_conversations WHERE id = %s AND user_id = %s",
             (conversation_id, user_id)
@@ -1247,7 +1247,7 @@ def get_user_portrait(user_id: int) -> Dict[str, Any]:
     """获取用户的最新画像数据"""
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 获取最新的用户画像
             cursor.execute(
                 "SELECT ideal_belief, logic_thinking, practice_ability, psychological_quality, emotional_state, hidden_need, tags, current_major FROM user_portraits WHERE user_id = %s ORDER BY id DESC LIMIT 1",
@@ -1306,7 +1306,7 @@ def get_user_portrait(user_id: int) -> Dict[str, Any]:
 async def register(data: AuthRequest) -> Dict[str, Any]:
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 检查用户名是否存在
             cursor.execute("SELECT id FROM users WHERE username = %s", (data.username,))
             if cursor.fetchone():
@@ -1353,7 +1353,7 @@ async def register(data: AuthRequest) -> Dict[str, Any]:
 async def login(data: AuthRequest) -> Dict[str, Any]:
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 查询用户
             cursor.execute("SELECT id, username, password, identity, role FROM users WHERE username = %s", (data.username,))
             user = cursor.fetchone()
@@ -1411,7 +1411,7 @@ async def get_chat_history(username: str, limit: int = 50, offset: int = 0):
     """
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 获取用户ID
             cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
             user_res = cursor.fetchone()
@@ -1469,7 +1469,7 @@ async def get_chat_history(username: str, limit: int = 50, offset: int = 0):
 async def get_conversations(username: str):
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
             user_res = cursor.fetchone()
             if not user_res:
@@ -1515,7 +1515,7 @@ async def get_conversations(username: str):
 async def create_conversation(data: ConversationCreateRequest):
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("SELECT id FROM users WHERE username = %s", (data.username,))
             user_res = cursor.fetchone()
             if not user_res:
@@ -1541,7 +1541,7 @@ async def create_conversation(data: ConversationCreateRequest):
 async def get_conversation_messages(conversation_id: int, username: str):
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
             user_res = cursor.fetchone()
             if not user_res:
@@ -1593,7 +1593,7 @@ async def get_chat_detail(chat_id: int):
     """
     conn = get_db_connection()
     try:
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("""
                 SELECT 
                     id, user_id, user_message, ai_reply,
@@ -1653,7 +1653,7 @@ async def get_discussion_posts(topic: str, username: Optional[str] = None, limit
         if username:
             viewer_user_id = get_user_id_by_username(conn, username)
 
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             if viewer_user_id is None:
                 cursor.execute(
                     """
@@ -1736,7 +1736,7 @@ async def create_discussion_post(data: DiscussionPostCreateRequest) -> Dict[str,
         user_id = get_user_id_by_username(conn, data.username)
         post_title = build_discussion_post_title(normalized_topic, normalized_content, data.title)
 
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute(
                 "INSERT INTO discussion_posts (user_id, topic, title, content) VALUES (%s, %s, %s, %s)",
                 (user_id, normalized_topic, post_title, normalized_content)
@@ -1783,7 +1783,7 @@ async def toggle_discussion_post_like(post_id: int, data: DiscussionPostActionRe
         user_id = get_user_id_by_username(conn, data.username)
         get_discussion_post_by_id(conn, post_id)
 
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute(
                 "SELECT id FROM discussion_post_likes WHERE post_id = %s AND user_id = %s",
                 (post_id, user_id)
@@ -1835,7 +1835,7 @@ async def report_discussion_post(post_id: int, data: DiscussionPostActionRequest
         user_id = get_user_id_by_username(conn, data.username)
         get_discussion_post_by_id(conn, post_id)
 
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute(
                 "SELECT id FROM discussion_post_reports WHERE post_id = %s AND user_id = %s",
                 (post_id, user_id)
@@ -2860,7 +2860,7 @@ async def chat_endpoint(data: ChatRequest):
         conversation: Optional[Dict[str, Any]] = None
         
         # --- 步骤 1: 获取用户ID并查询历史画像 ---
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             cursor.execute("SELECT id, identity, age_group FROM users WHERE username = %s", (data.username,))
             user_res = cursor.fetchone()
             if not user_res: 
@@ -3073,7 +3073,7 @@ async def chat_endpoint(data: ChatRequest):
         }
         
         # --- 步骤 4: 数据库持久化 ---
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 对所有标签进行去重
             all_tags_list = portrait_tags_final["demographic"] + portrait_tags_final["behavior_preference"] + portrait_tags_final["emotional_need"]
             all_tags_deduplicated = list(dict.fromkeys(all_tags_list))  # 保持顺序的去重
@@ -3276,7 +3276,7 @@ def get_overview(username: str):
     conn = None
     try:
         conn = get_db_connection()
-        with conn.cursor(dictionary=True) as cursor:
+        with conn.cursor() as cursor:
             # 仅允许管理员访问概览数据
             cursor.execute("SELECT identity, role FROM users WHERE username = %s", (username,))
             user_row = cursor.fetchone()
