@@ -487,16 +487,16 @@ def ensure_users_role_schema():
     try:
         # 创建 users 表
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                identity TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'user',
-                age_group TEXT NOT NULL,
-                current_major TEXT NOT NULL
-             );
-        """)
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        identity TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        age_group TEXT NOT NULL,
+        current_major TEXT DEFAULT '计算机科学'
+    );
+""")
         # 创建 user_portraits 表
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_portraits (
