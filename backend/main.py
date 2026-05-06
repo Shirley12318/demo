@@ -1025,7 +1025,7 @@ async def register(data: AuthRequest):
         c.execute("SELECT id FROM users WHERE username = ?", (data.username,))
         if c.fetchone():
             return {"status": "fail", "message": "用户名已存在"}
-        role = resolve_user_role(data.identity)
+        role = "user"
         if role == "admin":
             return {"status": "fail", "message": "管理员账号不支持自助注册"}
         identity_val = data.identity.strip() if data.identity else "普通学生"
@@ -1057,7 +1057,7 @@ async def login(data: AuthRequest):
             return {"status": "fail", "message": "密码错误"}
         stored_identity = user[3] or "普通学生"
         stored_role = normalize_db_role(user[4], stored_identity)
-        req_role = resolve_user_role(data.identity)
+        req_role = "user"
         if req_role != stored_role:
             exp = "管理员" if stored_role == "admin" else "普通用户"
             return {"status": "fail", "message": f"账号类型不匹配，请使用{exp}身份登录"}
