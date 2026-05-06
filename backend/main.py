@@ -19,6 +19,7 @@ from http import HTTPStatus
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import dashscope
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -1403,12 +1404,24 @@ async def chat_endpoint(data: ChatRequest):
         c.close()
         conn.close()
 
-    static_dir = os.path.join(os.path.dirname(__file__), "static")
-if os.path.isdir(static_dir):
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
-    print(f"✅ 静态文件已挂载: {static_dir}")
-else:
-    print(f"❌ 静态目录不存在: {static_dir}")
+   STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
+# 先挂载静态资源目录（让浏览器能加载 CSS/JS/图片等）
+assets_dir = os.path.join(STATIC_DIR, "assets")
+if os.path.isdir(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+# 根路由和所有未匹配的路径都返回 index.html（支持前端路由）
+@app.get("/")
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str = ""):
+    # 如果请求的是 API 路径（虽然理论上已经在上面的路由匹配了，但为了安全）
+    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+        raise HTTPException(status_code=404, detail="Not found")
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"error": "index.html not found"}
 
 # ======================== 启动 ========================
 if __name__ == "__main__":
