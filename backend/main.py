@@ -481,44 +481,43 @@ def fetch_discussion_post_detail(conn, post_id: int, viewer_user_id: Optional[in
         raise HTTPException(status_code=404, detail="帖子不存在")
     return dict(row)
 
-def ensure_users_role_schema() -> None:
+def ensure_users_role_schema():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # ========== 新增：创建 users 表（如果不存在） ==========
+        # 创建 users 表
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL UNIQUE,
+                username TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
-                identity TEXT DEFAULT '普通学生',
-                role TEXT DEFAULT 'user',
-                age_group TEXT DEFAULT '20-25岁',
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+                identity TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user',
+                age_group TEXT NOT NULL,
+                current_major TEXT NOT NULL
+             );
         """)
-        # ========== 新增：创建 user_portraits 表（如果不存在） ==========
+        # 创建 user_portraits 表
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_portraits (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
-                ideal_belief INTEGER DEFAULT 80,
-                logic_thinking INTEGER DEFAULT 80,
-                practice_ability INTEGER DEFAULT 70,
-                psychological_quality INTEGER DEFAULT 75,
-                emotional_state INTEGER DEFAULT 70,
+                ideal_belief INTEGER,
+                logic_thinking INTEGER,
+                practice_ability INTEGER,
+                psychological_quality INTEGER,
+                emotional_state INTEGER,
                 hidden_need TEXT,
                 tags TEXT,
-                current_major TEXT,
                 chat_content TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                current_major TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
-        # 后续原来的 role 字段补充逻辑（可以保留，但既然表新建了，role 已经在）
-        # 为了避免错误，可以注释掉对 role 的 ALTER 和 UPDATE 操作
         conn.commit()
     except Exception as e:
-        logger.error(f"初始化 users 表失败: {str(e)}")
+        logger.error(f"建表失败: {e}")
         conn.rollback()
         raise
     finally:
@@ -1403,25 +1402,6 @@ async def chat_endpoint(data: ChatRequest):
     finally:
         c.close()
         conn.close()
-
-   STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-
-# 先挂载静态资源目录（让浏览器能加载 CSS/JS/图片等）
-assets_dir = os.path.join(STATIC_DIR, "assets")
-if os.path.isdir(assets_dir):
-    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
-# 根路由和所有未匹配的路径都返回 index.html（支持前端路由）
-@app.get("/")
-@app.get("/{full_path:path}")
-async def serve_spa(full_path: str = ""):
-    # 如果请求的是 API 路径（虽然理论上已经在上面的路由匹配了，但为了安全）
-    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
-        raise HTTPException(status_code=404, detail="Not found")
-    index_path = os.path.join(STATIC_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"error": "index.html not found"}
 
 # ======================== 启动 ========================
 if __name__ == "__main__":
