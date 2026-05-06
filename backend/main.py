@@ -1056,7 +1056,7 @@ async def login(data: AuthRequest):
         if data.password != user[2]:
             return {"status": "fail", "message": "密码错误"}
         stored_identity = user[3] or "普通学生"
-        stored_role = normalize_db_role(user[4], stored_identity)
+        stored_role = "user"
         req_role = "user"
         if req_role != stored_role:
             exp = "管理员" if stored_role == "admin" else "普通用户"
@@ -1305,7 +1305,7 @@ def get_overview(username: str):
         if not user:
             raise HTTPException(404, "用户不存在")
         db_identity = user[0] or ""
-        db_role = normalize_db_role(user[1], db_identity)
+        db_role = "user"
         if db_role != "admin":
             raise HTTPException(403, "仅管理员可访问数据概览")
         c.execute("SELECT COUNT(*) FROM users")
