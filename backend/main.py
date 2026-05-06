@@ -18,6 +18,7 @@ from typing import Dict, Any, List, Optional, cast
 from http import HTTPStatus
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import dashscope
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -1401,6 +1402,13 @@ async def chat_endpoint(data: ChatRequest):
     finally:
         c.close()
         conn.close()
+
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    print(f"✅ 静态文件已挂载: {static_dir}")
+else:
+    print(f"❌ 静态目录不存在: {static_dir}")
 
 # ======================== 启动 ========================
 if __name__ == "__main__":
