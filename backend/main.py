@@ -6,6 +6,7 @@ from datetime import datetime
 from html import unescape
 from urllib.parse import urljoin, urlparse
 import sqlite3
+from dotenv import load_dotenv
 
 # ======================== Hugging Face 国内镜像配置 ========================
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
@@ -27,6 +28,7 @@ import torch
 import requests
 import concurrent.futures
 from openai import OpenAI
+load_dotenv()
 
 # ======================== 基础配置 ========================
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -42,21 +44,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 使用 SQLite 数据库
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.db")
+# 从环境变量读取，如果没设置则返回 None（或空字符串）
+dashscope.api_key = os.environ.get("DASHSCOPE_API_KEY")   # 建议环境变量名为 DASHSCOPE_API_KEY
 
-dashscope.api_key = "sk-d2df76fb2d91448f97dc3d6d7007169e"
-
-# DeepSeek 大模型配置
-DEEPSEEK_API_KEY = "sk-d6a467fa118048a8aed508f6de87ddfb"
-DEEPSEEK_API_BASE = "https://api.deepseek.com"
-DEEPSEEK_MODEL_ID = "deepseek-chat"
+# ========== 2. DeepSeek 配置 ==========
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")      # 必须设置
+# API_BASE 和 MODEL_ID 可以给默认值，也可以从环境变量读取
+DEEPSEEK_API_BASE = os.environ.get("DEEPSEEK_API_BASE", "https://api.deepseek.com")
+DEEPSEEK_MODEL_ID = os.environ.get("DEEPSEEK_MODEL_ID", "deepseek-chat")
 deepseek_client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_API_BASE)
 
-# Kimi 大模型配置
-KIMI_API_KEY = "sk-Yur62xHSg8AW7PZGK9hZvJLtXXoPUpuRNDoBq12OY0KMDi8V"
-KIMI_API_BASE = "https://api.moonshot.cn/v1"
-KIMI_MODEL_ID = "kimi-k2-turbo-preview"
+# ========== 3. Kimi 配置 ==========
+KIMI_API_KEY = os.environ.get("KIMI_API_KEY")
+KIMI_API_BASE = os.environ.get("KIMI_API_BASE", "https://api.moonshot.cn/v1")
+KIMI_MODEL_ID = os.environ.get("KIMI_MODEL_ID", "kimi-k2-turbo-preview")
 kimi_client = OpenAI(api_key=KIMI_API_KEY, base_url=KIMI_API_BASE)
 
 # BERT情感分析模型
